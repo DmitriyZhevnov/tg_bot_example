@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/rs/zerolog"
 	"os"
+	"os/signal"
+	"syscall"
 	"testbot/interanl/businesslayer/domain/bot"
 	"testbot/interanl/businesslayer/domain/users"
 	"testbot/interanl/datalayer/collections/cache"
@@ -22,6 +24,9 @@ func main() {
 	ctx := context.Background()
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	usersCollection := cache.NewUsersCollection()
 	usersProcessor := users.NewProcessor(logger, usersCollection)
 
@@ -31,6 +36,19 @@ func main() {
 
 		return
 	}
+
+	// Канал для приема сигналов от операционной системы
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		// Ждем сигнал остановки
+		<-stop
+		if err := tgBot.SendMessage(adminChatID, "Бот остановлен!"); err != nil {
+			logger.Err(err).Send()
+
+			return
+		}
+	}()
 
 	if err := tgBot.SendMessage(adminChatID, "bot started"); err != nil {
 		logger.Err(err).Send()
