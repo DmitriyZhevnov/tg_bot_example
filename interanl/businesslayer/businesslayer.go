@@ -15,4 +15,8 @@ type (
 		LoadByChatID(ctx context.Context, chatID int64) (*dto.User, error)
 		Work(userName string) string
 	}
+
+	Executor interface {
+		SaveValues(a, b int) error
+	}
 )

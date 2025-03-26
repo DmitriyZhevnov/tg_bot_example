@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 	"testbot/interanl/businesslayer/domain/bot"
+	"testbot/interanl/businesslayer/domain/executor"
 	"testbot/interanl/businesslayer/domain/users"
 	"testbot/interanl/datalayer/collections/cache"
 )
@@ -29,8 +30,8 @@ func main() {
 
 	usersCollection := cache.NewUsersCollection()
 	usersProcessor := users.NewProcessor(logger, usersCollection)
-
-	tgBot, err := bot.New(apiKey, logger, usersProcessor)
+	executorProcessor := executor.NewProcessor()
+	tgBot, err := bot.New(apiKey, logger, usersProcessor, executorProcessor)
 	if err != nil {
 		logger.Err(err).Send()
 
